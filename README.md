@@ -1,56 +1,41 @@
-# Docker Postgres Demo with Certificate
+# Docker Postgres with SSL Certificate
 This repo is for running a Docker postgres image with SSL based on the library
-[postgres 9.4 image](https://github.com/docker-library/postgres).
-
-## Rational
-I created this to see application behavior with an invalid/out of date
-certificate on the postgres server. You can modify the certificate approval
-parameters in the file `create-certs.sh`. For more information about approving
-a CSR, check the openssl help output by running:
-```
-openssl ca -h
-```
+[postgres 9.5 image](https://github.com/docker-library/postgres).
 
 ## Build
-To build yourself, I'm assuming you have docker installed. You may want to do
-this if you don't use postgres 9.3 or 9.4
 ```
-git clone git@github.com:micahhausler/docker-postgres-cert.git
-cd docker-postgres-cert/
-docker build -t $(whoami)/postgres-ssl .
-```
-
-## Download
-```
-docker pull micahhausler/postgres-outdated-ssl:9.3
-# or
-docker pull micahhausler/postgres-outdated-ssl:9.4
+docker pull nimbustech/postgres-ssl:9.5 
 ```
 
 ## Use
-First get postgres up and running:
-```
-docker run -t --name postgres -h postgres -p 5432:5432 $(whoami)/postgres-ssl
-```
 
-Then connect with the proper `sslmode` parameter that your client uses to
-connect to postgres.
+ 1. First get postgres up and running (replace `$PG_DATA` and '`demo'` as required):
+        
+        docker run --rm --name psql -e POSTGRES_DB='demo' -e POSTGRES_PASSWORD='password' nimbustech/postgres-ssl:9.5
+        
+ 2. Then copy your `server.crt` and `server.key` files to `/my/cert/folder`. You must make sure that the ownership
+  and permisions are correct, typically by running the following *in the host*:
+  
+        sudo chown 999.docker *
+        sudo chmod 600 server.key
+ 
+ 3. You can configure postgres to use your
+    certificates with:
+   
+        docker run --name psql -d -v /my/cert/folder:/var/ssl -e POSTGRES_PASSWORD='password' nimbustech/postgres-ssl:9.5
+        
+         
+ 3. Then connect with the proper `sslmode` parameter that your client uses to connect to postgres.
 ([libpq docs](http://www.postgresql.org/docs/9.4/static/libpq-connect.html#LIBPQ-CONNECT-SSLMODE))
+    * disable - **will not use ssl**
+    * allow - **will revert to non-ssl mode with an outdated cert**
+    * prefer - **will revert to non-ssl mode with an outdated cert**
+    * require - **will fail with an outdated cert**
+    * verify-ca - **will fail with an outdated cert**
+    * verify-full- **will fail with an outdated cert**
 
-* disable - **will not use ssl**
-* allow - **will revert to non-ssl mode with an outdated cert**
-* prefer - **will revert to non-ssl mode with an outdated cert**
-* require - **will fail with an outdated cert**
-* verify-ca - **will fail with an outdated cert**
-* verify-full- **will fail with an outdated cert**
-
 ```
-psql "sslmode=prefer host=$(boot2docker ip) port=5432 user=postgres"
-```
-or
-```
-export PGSSLMODE="prefer"
-psql -U postgres -h $(boot2docker ip) -p 5432
+PGSSLMODE="prefer"  psql -h xxx.xxx.xxx.xxx -U postgres -d dbname
 ```
 
 ## MIT License

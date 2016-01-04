@@ -1,2 +1,4 @@
 #!/bin/bash
-cat /etc/postgresql-common/ssl.conf | tee -a $PGDATA/postgresql.conf
+chown postgres /var/lib/postgresql/data/server.key
+chmod 640 /var/lib/postgresql/data/server.key
+

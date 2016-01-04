@@ -1,17 +1,21 @@
-FROM postgres:9.4
+FROM postgres:9.5
 
-MAINTAINER Micah Hausler,<hausler.m@gmail.com>
+MAINTAINER Cayle Sharrock<cayle@nimbustech.biz>
 
-ENV DOCKER=True
-
-# Add the SSL config
+# Override this in your docker run command to customize
 ADD ./ssl.conf /etc/postgresql-common/ssl.conf
-
 RUN mkdir -p /docker-entrypoint-initdb.d
 
-# Add create cert script
-ADD ./create-certs.sh /docker-entrypoint-initdb.d/create-certs.sh
+ENV PGDATA /var/lib/postgresql/data/databases
 # Add the ssl config setup script
-ADD ./ssl.sh /docker-entrypoint-initdb.d/ssl.sh
+COPY pg_hba.conf /usr/share/postgresql/9.5/pg_hba.conf.sample
+COPY postgresql.conf /usr/share/postgresql/9.5/postgresql.conf.sample
+COPY server.crt server.key /var/ssl/
+RUN chown postgres.postgres /usr/share/postgresql/9.5/pg_hba.conf.sample \
+                            /usr/share/postgresql/9.5/postgresql.conf.sample \
+                            /var/ssl/server.key \
+                            /var/ssl/server.crt && \
+    chmod 600 /var/ssl/server.key
+#RUN chmod 755 /docker-entrypoint-initdb.d/*.sh
 
-RUN chmod 755 /docker-entrypoint-initdb.d/*.sh
+
