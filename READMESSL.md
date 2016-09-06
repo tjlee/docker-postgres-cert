@@ -10,38 +10,31 @@ If you are using Windows OS use ```winpty``` before each command provided in thi
 ```bash
 openssl genrsa -des3 -out server.key 1024
 ```
-
 2. Remove the passphrase 
 ```bash
 openssl rsa -in server.key -out server.key
 ```
-
 3. Create server certificate
 Provide *Common Name* as 192.168.99.100 (your docker host ip)
 ```bash
 openssl req -new -key server.key -days 3650 -out server.crt -x509
 ```
-
 4. Sinse we are self-signing, we use the server certificate as the trusted root cetrificate
 ```bash
 cp server.crt root.crt
 ```
-
 5. Edit your *pg_hba.conf*, e.g.: 
 ```bash
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
-
 # "local" is for Unix domain socket connections only
 local   all             all                                     trust
 # IPv4 local connections:
 host    all             all             127.0.0.1/32            trust
 # IPv6 local connections:
 host    all             all             ::1/128                 trust
-
 host    all all 172.17.0.0/8   md5
 hostssl all all 0.0.0.0/0      md5
 ```
-
 6. Edit your *postgresql.conf* to activate ssl:
 ```bash
 ssl = on
@@ -64,7 +57,6 @@ On client we need 3 files, for Windows these files must be in ```%appdata%/postg
 openssl genrsa -des3 -out ./postgresql.key 1024
 openssl rsa -in /tmp/postgresql.key -out ./postgresql.key
 ```
-
 8. Generate ```postgresql.crt```
 Certificate common name (CN) must be set to the database user name we'll connect as!
 ```bash
